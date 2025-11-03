@@ -521,67 +521,6 @@
       </div>
     </footer>
 
-    <!-- Flash Popup Script - preserved for Flask integration -->
-    <script>
-      // Note: This section uses Flask/Jinja2 template syntax
-      // It will only work when served through a Flask application
-      document.addEventListener("DOMContentLoaded", function () {
-        // Check if flash messages exist (this is placeholder for static HTML)
-        // In Flask, this would be: const messages = {{ get_flashed_messages(with_categories=true) | tojson }};
-        // For static HTML, use an empty array or mock data:
-        const messages = [
-          ["popup", "Sign in or create an account to see more!"],
-        ];
-
-        messages.forEach(function (item) {
-          const category = item[0];
-          const message = item[1];
-
-          if (category === "popup") {
-            const popup = document.createElement("div");
-            popup.textContent = message;
-
-            // Base styling (matches site theme)
-            popup.style.position = "fixed";
-            popup.style.top = "-60px";
-            popup.style.right = "20px";
-            popup.style.padding = "14px 22px";
-            popup.style.background =
-              "linear-gradient(135deg, #fff8e1, #ffd54f)";
-            popup.style.color = "#333";
-            popup.style.border = "2px solid goldenrod";
-            popup.style.borderRadius = "10px";
-            popup.style.fontFamily = "'Poppins', sans-serif";
-            popup.style.fontWeight = "500";
-            popup.style.fontSize = "15px";
-            popup.style.boxShadow = "0 4px 10px rgba(0,0,0,0.15)";
-            popup.style.zIndex = "9999";
-            popup.style.opacity = "0";
-            popup.style.transition =
-              "top 0.5s ease, opacity 0.4s ease, transform 0.4s ease";
-
-            document.body.appendChild(popup);
-
-            // Slide down + fade in
-            setTimeout(function () {
-              popup.style.top = "20px";
-              popup.style.opacity = "1";
-              popup.style.transform = "translateY(0)";
-            }, 100);
-
-            // Auto fade-out + remove after 4s
-            setTimeout(function () {
-              popup.style.opacity = "0";
-              popup.style.top = "-60px";
-              setTimeout(function () {
-                popup.remove();
-              }, 500);
-            }, 4000);
-          }
-        });
-      });
-    </script>
-
     <script>
       $("#menu-btn").click(function () {
         $("nav .navigation ul").addClass("active");
