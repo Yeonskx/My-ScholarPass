@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scholarship Questionnaire</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background: linear-gradient(135deg, #faf8f5 0%, #f0ebe3 100%);
+        color: #333;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: white;
+        padding: 50px 40px;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        max-width: 550px;
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .container::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, goldenrod, #d4af37);
+      }
+
+      h1 {
+        color: goldenrod;
+        margin-bottom: 10px;
+        font-size: 28px;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: #f0f0f0;
+        border-radius: 10px;
+        margin: 20px 0 30px;
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, goldenrod, #d4af37);
+        width: 0%;
+        transition: width 0.4s ease;
+        border-radius: 10px;
+      }
+
+      .question-container {
+        display: none;
+        animation: fadeIn 0.5s ease;
+      }
+
+      .question-container.active {
+        display: block;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .question-number {
+        color: #999;
+        font-size: 14px;
+        margin-bottom: 10px;
+      }
+
+      .question-text {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 25px;
+        color: #2c3e50;
+      }
+
+      .options {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .option-btn {
+        padding: 18px 20px;
+        background: #f8f9fa;
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 16px;
+        text-align: left;
+        color: #333;
+        font-weight: 500;
+      }
+
+      .option-btn:hover {
+        background: #fff9e6;
+        border-color: goldenrod;
+        transform: translateX(5px);
+      }
+
+      .option-btn:active {
+        transform: scale(0.98);
+      }
+
+      .navigation {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 30px;
+      }
+
+      .nav-btn {
+        padding: 12px 30px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 15px;
+      }
+
+      .back-btn {
+        background: #f0f0f0;
+        color: #666;
+      }
+
+      .back-btn:hover {
+        background: #e0e0e0;
+      }
+
+      .back-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+
+      .submit-btn {
+        background: goldenrod;
+        color: white;
+        display: none;
+      }
+
+      .submit-btn:hover {
+        background: #d4af37;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(218, 165, 32, 0.3);
+      }
+
+      .results {
+        display: none;
+        text-align: center;
+      }
+
+      .results.active {
+        display: block;
+        animation: fadeIn 0.5s ease;
+      }
+
+      .results h2 {
+        color: goldenrod;
+        margin-bottom: 20px;
+        font-size: 26px;
+      }
+
+      .results-content {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 12px;
+        margin: 20px 0;
+        text-align: left;
+      }
+
+      .restart-btn {
+        background: goldenrod;
+        color: white;
+        padding: 15px 40px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 20px;
+      }
+
+      .restart-btn:hover {
+        background: #d4af37;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Let's Find Scholarships for You 🎓</h1>
+
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+
+      <!-- ✅ wrapped with form -->
+      <form id="questionnaire" onsubmit="return false;">
+        <div class="question-container active" data-question="1">
+          <div class="question-number">Question 1 of 5</div>
+          <div class="question-text">
+            What type of high school did you attend?
+          </div>
+          <div class="options">
+            <button type="button" class="option-btn" data-value="science">
+              Science High School
+            </button>
+            <button type="button" class="option-btn" data-value="public">
+              Public School
+            </button>
+            <button type="button" class="option-btn" data-value="private">
+              Private School
+            </button>
+          </div>
+        </div>
+
+        <div class="question-container" data-question="2">
+          <div class="question-number">Question 2 of 5</div>
+          <div class="question-text">What is your average grade?</div>
+          <div class="options">
+            <button type="button" class="option-btn" data-value="95">
+              95 and above
+            </button>
+            <button type="button" class="option-btn" data-value="90">
+              90–94
+            </button>
+            <button type="button" class="option-btn" data-value="85">
+              85–89
+            </button>
+            <button type="button" class="option-btn" data-value="below85">
+              Below 85
+            </button>
+          </div>
+        </div>
+
+        <div class="question-container" data-question="3">
+          <div class="question-number">Question 3 of 5</div>
+          <div class="question-text">Do you need financial assistance?</div>
+          <div class="options">
+            <button type="button" class="option-btn" data-value="yes">
+              Yes
+            </button>
+            <button type="button" class="option-btn" data-value="no">No</button>
+          </div>
+        </div>
+
+        <div class="question-container" data-question="4">
+          <div class="question-number">Question 4 of 5</div>
+          <div class="question-text">Are you active in sports or the arts?</div>
+          <div class="options">
+            <button type="button" class="option-btn" data-value="sports">
+              Sports
+            </button>
+            <button type="button" class="option-btn" data-value="arts">
+              Arts
+            </button>
+            <button type="button" class="option-btn" data-value="none">
+              None
+            </button>
+          </div>
+        </div>
+
+        <div class="question-container" data-question="5">
+          <div class="question-number">Question 5 of 5</div>
+          <div class="question-text">Which university do you prefer?</div>
+          <div class="options">
+            <button type="button" class="option-btn" data-value="Ateneo">
+              Ateneo de Manila University
+            </button>
+            <button type="button" class="option-btn" data-value="DLSU">
+              De La Salle University
+            </button>
+            <button type="button" class="option-btn" data-value="UST">
+              University of Santo Tomas
+            </button>
+            <button type="button" class="option-btn" data-value="Mapua">
+              Mapúa University
+            </button>
+          </div>
+        </div>
+
+        <div class="navigation">
+          <button type="button" class="nav-btn back-btn" id="backBtn" disabled>
+            Back
+          </button>
+          <button type="button" class="nav-btn submit-btn" id="submitBtn">
+            Get My Recommendations
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <script>
+      const questions = [
+        { name: "school_type", label: "High School Type" },
+        { name: "average", label: "Average Grade" },
+        { name: "financial_need", label: "Financial Assistance" },
+        { name: "talent", label: "Sports/Arts" },
+        { name: "university", label: "Preferred University" },
+      ];
+
+      let currentQuestion = 0;
+      const answers = {};
+
+      const questionContainers = document.querySelectorAll(
+        ".question-container"
+      );
+      const progressFill = document.getElementById("progressFill");
+      const backBtn = document.getElementById("backBtn");
+      const submitBtn = document.getElementById("submitBtn");
+
+      function updateProgress() {
+        const progress = (currentQuestion / questions.length) * 100;
+        progressFill.style.width = progress + "%";
+      }
+
+      function showQuestion(index) {
+        questionContainers.forEach((container, i) => {
+          container.classList.toggle("active", i === index);
+        });
+
+        backBtn.disabled = index === 0;
+        submitBtn.style.display =
+          index === questions.length - 1 ? "block" : "none";
+        updateProgress();
+      }
+
+      document.querySelectorAll(".option-btn").forEach((btn) => {
+        btn.addEventListener("click", function () {
+          const questionNum = this.closest(".question-container").dataset
+            .question;
+          const questionData = questions[questionNum - 1];
+          answers[questionData.name] = this.dataset.value;
+
+          if (currentQuestion < questions.length - 1) {
+            currentQuestion++;
+            showQuestion(currentQuestion);
+          } else {
+            submitBtn.style.display = "block";
+          }
+        });
+      });
+
+      backBtn.addEventListener("click", () => {
+        if (currentQuestion > 0) {
+          currentQuestion--;
+          showQuestion(currentQuestion);
+        }
+      });
+
+      submitBtn.addEventListener("click", () => {
+        const formData = new FormData();
+        Object.entries(answers).forEach(([key, value]) =>
+          formData.append(key, value)
+        );
+
+        fetch("/recommend", {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => response.text())
+          .then((html) => {
+            document.open();
+            document.write(html);
+            document.close();
+          })
+          .catch((err) => alert("Error: " + err));
+      });
+
+      showQuestion(0);
+    </script>
+  </body>
+</html>

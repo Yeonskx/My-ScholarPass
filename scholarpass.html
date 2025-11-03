@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ScholarPass</title>
+
+    <!-- Swiper CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"
+    />
+
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="scholarpass-style.css" />
+
+    <script
+      src="https://code.jquery.com/jquery-3.7.1.min.js"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+
+  <body>
+    <!-- Navigation Bar -->
+    <nav>
+      <img src="images/logo.png" alt="" />
+      <div class="navigation">
+        <ul>
+          <i id="menu-close" class="fa-solid fa-x"></i>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="students.html">Students</a></li>
+          <li><a href="providers.html">Scholarship Provider</a></li>
+          <li><a class="active" href="scholarpass.html">My ScholarPass</a></li>
+          <li><a class="gold" href="accountsignin.html">Account Sign In</a></li>
+        </ul>
+        <img id="menu-btn" src="images/menu.png" alt="" />
+      </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-header">Scholarship Pass</div>
+      <div class="sidebar-item active" onclick="filterScholarships('all')">
+        <div class="sidebar-icon">📋</div>
+        <div class="sidebar-text">Scholarship List</div>
+      </div>
+      <div class="sidebar-item" onclick="filterScholarships('saved')">
+        <div class="sidebar-icon">♡</div>
+        <div class="sidebar-text">Saved</div>
+      </div>
+      <div class="sidebar-item" onclick="filterScholarships('applied')">
+        <div class="sidebar-icon">✓</div>
+        <div class="sidebar-text">Applied</div>
+      </div>
+      <div class="sidebar-item" onclick="filterScholarships('passed')">
+        <div class="sidebar-icon">🏆</div>
+        <div class="sidebar-text">Passed</div>
+      </div>
+      <div class="sidebar-item" onclick="filterScholarships('pending')">
+        <div class="sidebar-icon">⋯</div>
+        <div class="sidebar-text">Pending</div>
+      </div>
+      <div class="sidebar-item" onclick="filterScholarships('not-interested')">
+        <div class="sidebar-icon">✕</div>
+        <div class="sidebar-text">Not Interested</div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="header">
+        <h1><span id="scholarship-count">16</span> Scholarships Available</h1>
+      </div>
+
+      <div class="scholarships-grid">
+        <div class="scholarships-container" id="scholarships-container"></div>
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="scholarship-modal" class="modal">
+      <div class="modal-content">
+        <div id="modal-scholarship-content"></div>
+      </div>
+    </div>
+
+    <script>
+      const scholarships = [
+        {
+          id: 1,
+          status: "saved",
+          title: "Ateneo Freshmen Merit Scholarship",
+          university: "Ateneo de Manila University",
+          description:
+            "Top 50 applicants based on academic ranking and ACET scores get free tuition and ₱50,000 annual allowance.",
+          tags: ["Merit-based", "Full Tuition", "Allowance"],
+          details: {
+            eligibility:
+              "Top 50 applicants based on ACET scores and academic ranking",
+            benefits: "100% tuition coverage + ₱50,000 annual allowance",
+            requirements: "Maintain a QPI of 3.0 or higher each semester",
+            deadline: "Automatic consideration upon ACET application",
+            renewable: "Yes, renewable annually with good academic standing",
+          },
+        },
+        {
+          id: 2,
+          status: "applied",
+          title: "Director's List Scholarship",
+          university: "Ateneo de Manila University",
+          description:
+            "150 applicants with outstanding high school averages and extracurricular activities receive a ₱100,000 grant.",
+          tags: ["Academic Excellence", "₱100,000 Grant"],
+          details: {
+            eligibility:
+              "Outstanding high school grades and extracurricular achievements",
+            benefits: "₱100,000 one-time grant",
+            requirements: "Strong academic record and demonstrated leadership",
+            deadline: "Check with admissions office",
+            renewable: "One-time grant",
+          },
+        },
+        {
+          id: 3,
+          status: "saved",
+          title: "Academic Scholarships",
+          university: "Various Universities",
+          description:
+            "Valedictorians and salutatorians of science or public high schools receive 100% or 50% tuition coverage.",
+          tags: ["Valedictorian", "Full Tuition", "Half Tuition"],
+        },
+        {
+          id: 4,
+          status: "pending",
+          title: "Financial Aid Grants",
+          university: "Various Universities",
+          description:
+            "Provides tuition discounts, dormitory assistance, and allowances for books, food, and transportation.",
+          tags: ["Financial Aid", "Assistance", "Allowance"],
+        },
+        {
+          id: 5,
+          status: "applied",
+          title: "Archer Achiever Scholarship",
+          university: "De La Salle University",
+          description:
+            "Top students from science or public high schools get a full waiver of tuition and other fees.",
+          tags: ["Full Tuition Waiver", "Entrance Exam"],
+        },
+        {
+          id: 6,
+          status: "saved",
+          title: "Star Scholars Program",
+          university: "De La Salle University",
+          description:
+            "Integrated scholarship covering college and postgraduate programs such as master's, law, or medicine.",
+          tags: ["Integrated", "Graduate", "Full Scholarship"],
+        },
+        {
+          id: 7,
+          status: "saved",
+          title: "Vaugirard Scholarship Program",
+          university: "De La Salle University",
+          description:
+            "50 public high school graduates get free tuition and living allowances.",
+          tags: ["Public School", "Full Tuition", "Allowance"],
+        },
+        {
+          id: 8,
+          status: "pending",
+          title: "Santo Tomas College Scholarship",
+          university: "University of Santo Tomas",
+          description: "For students with excellent academic performance.",
+          tags: ["Academic Excellence", "Merit-based"],
+        },
+        {
+          id: 9,
+          status: "applied",
+          title: "San Lorenzo Ruiz Student Assistance Scholarship",
+          university: "University of Santo Tomas",
+          description:
+            "For students in need of financial aid who can work 20–30 hours a week at the university.",
+          tags: ["Financial Aid", "Work-study"],
+        },
+        {
+          id: 10,
+          status: "saved",
+          title: "Santo Domingo de Guzman Scholarship for the Gifted",
+          university: "University of Santo Tomas",
+          description: "For students excelling in music, arts, or sports.",
+          tags: ["Talent-based", "Arts", "Sports"],
+        },
+        {
+          id: 11,
+          status: "saved",
+          title: "San Martin de Porres Scholarship",
+          university: "University of Santo Tomas",
+          description: "For students from underprivileged communities.",
+          tags: ["Financial Aid", "Community Assistance"],
+        },
+        {
+          id: 12,
+          status: "passed",
+          title: "Merit Scholarship",
+          university: "University of Asia and the Pacific",
+          description:
+            "Top students get free tuition, stipends, and book and lodging allowance.",
+          tags: ["Full Tuition", "Stipend", "Book Allowance"],
+        },
+        {
+          id: 13,
+          status: "saved",
+          title: "Athletic or Arts Scholarships",
+          university: "Various Universities",
+          description:
+            "Full or partial scholarships for one year, renewable based on performance.",
+          tags: ["Athletic", "Arts", "Renewable"],
+        },
+        {
+          id: 14,
+          status: "pending",
+          title: "Financial Aid Program",
+          university: "Various Universities",
+          description:
+            "Offers tuition discounts for students working part-time at university units.",
+          tags: ["Part-time", "Financial Aid"],
+        },
+        {
+          id: 15,
+          status: "passed",
+          title: "Alfonso Yuchengco Scholarship",
+          university: "Mapúa University",
+          description:
+            "Science high school graduates scoring at least 70% in the entrance exam get 40% tuition discount and ₱10,000 quarterly stipend.",
+          tags: ["40% Discount", "Stipend"],
+        },
+        {
+          id: 16,
+          status: "applied",
+          title: "Don Tomas Mapua Scholarship",
+          university: "Mapúa University",
+          description:
+            "Mapúa students with an average of 1.5 to 1.0 receive 100% tuition discount.",
+          tags: ["Academic Excellence", "Full Tuition"],
+        },
+      ];
+
+      let currentFilter = "all";
+
+      function changeStatus(scholarshipId, newStatus) {
+        event.stopPropagation();
+        const scholarship = scholarships.find((s) => s.id === scholarshipId);
+        if (scholarship) {
+          scholarship.status = newStatus;
+          renderScholarships();
+        }
+      }
+
+      function renderScholarships() {
+        const container = document.getElementById("scholarships-container");
+        const filtered =
+          currentFilter === "all"
+            ? scholarships
+            : scholarships.filter((s) => s.status === currentFilter);
+
+        document.getElementById("scholarship-count").textContent =
+          filtered.length;
+
+        container.innerHTML = filtered
+          .map((s) => {
+            let statusClass = `status-${s.status}`;
+
+            return `
+              <div class="scholarship-card" onclick="openScholarshipModal(${
+                s.id
+              })">
+                <div class="card-header">
+                  <span class="status-badge ${statusClass}">
+                    ${s.status.toUpperCase().replace("-", " ")}
+                  </span>
+                  <div class="action-icons">
+                    <span class="action-icon ${
+                      s.status === "saved" ? "active" : ""
+                    }" onclick="changeStatus(${
+              s.id
+            }, 'saved')" title="Save">♡</span>
+                    <span class="action-icon ${
+                      s.status === "applied" ? "active" : ""
+                    }" onclick="changeStatus(${
+              s.id
+            }, 'applied')" title="Applied">✓</span>
+                    <span class="action-icon ${
+                      s.status === "passed" ? "active" : ""
+                    }" onclick="changeStatus(${
+              s.id
+            }, 'passed')" title="Passed">🏆</span>
+                    <span class="action-icon ${
+                      s.status === "pending" ? "active" : ""
+                    }" onclick="changeStatus(${
+              s.id
+            }, 'pending')" title="Pending">⋯</span>
+                    <span class="action-icon ${
+                      s.status === "not-interested" ? "active" : ""
+                    }" onclick="changeStatus(${
+              s.id
+            }, 'not-interested')" title="Not Interested">✕</span>
+                  </div>
+                </div>
+                <div class="scholarship-title">${s.title}</div>
+                <div class="university-name">${s.university}</div>
+                <div class="scholarship-description">${s.description}</div>
+                <div class="tags">
+                  ${s.tags
+                    .map(
+                      (tag, index) =>
+                        `<span class="tag ${
+                          index === 1
+                            ? "secondary"
+                            : index === 2
+                            ? "tertiary"
+                            : ""
+                        }">${tag}</span>`
+                    )
+                    .join("")}
+                </div>
+              </div>`;
+          })
+          .join("");
+      }
+
+      function filterScholarships(filter) {
+        currentFilter = filter;
+        document
+          .querySelectorAll(".sidebar-item")
+          .forEach((i) => i.classList.remove("active"));
+        event.currentTarget.classList.add("active");
+        renderScholarships();
+      }
+
+      function openScholarshipModal(scholarshipId) {
+        const scholarship = scholarships.find((s) => s.id === scholarshipId);
+        if (!scholarship) return;
+
+        const modal = document.getElementById("scholarship-modal");
+        const modalContent = document.getElementById(
+          "modal-scholarship-content"
+        );
+
+        modalContent.innerHTML = `
+          <div class="modal-header-content">
+            <div>
+              <h2 class="modal-title">${scholarship.title}</h2>
+              <p class="modal-university">${scholarship.university}</p>
+            </div>
+            <span class="modal-close" onclick="closeScholarshipModal()">&times;</span>
+          </div>
+          
+          <div class="modal-body">
+            <div class="modal-section">
+              <h3>Description</h3>
+              <p>${scholarship.description}</p>
+            </div>
+            
+            ${
+              scholarship.details
+                ? `
+              <div class="modal-section">
+                <h3>Eligibility</h3>
+                <p>${scholarship.details.eligibility}</p>
+              </div>
+              
+              <div class="modal-section">
+                <h3>Benefits</h3>
+                <p>${scholarship.details.benefits}</p>
+              </div>
+              
+              <div class="modal-section">
+                <h3>Requirements</h3>
+                <p>${scholarship.details.requirements}</p>
+              </div>
+              
+              <div class="modal-section">
+                <h3>Deadline</h3>
+                <p>${scholarship.details.deadline}</p>
+              </div>
+              
+              <div class="modal-section">
+                <h3>Renewable</h3>
+                <p>${scholarship.details.renewable}</p>
+              </div>
+            `
+                : ""
+            }
+            
+            <div class="modal-section">
+              <h3>Tags</h3>
+              <div class="tags">
+                ${scholarship.tags
+                  .map(
+                    (tag, index) => `
+                  <span class="tag ${
+                    index === 1 ? "secondary" : index === 2 ? "tertiary" : ""
+                  }">${tag}</span>
+                `
+                  )
+                  .join("")}
+              </div>
+            </div>
+          </div>
+        `;
+
+        modal.style.display = "flex";
+      }
+
+      function closeScholarshipModal() {
+        document.getElementById("scholarship-modal").style.display = "none";
+      }
+
+      window.onclick = function (event) {
+        const modal = document.getElementById("scholarship-modal");
+        if (event.target === modal) {
+          closeScholarshipModal();
+        }
+      };
+
+      renderScholarships();
+    </script>
+  </body>
+</html>

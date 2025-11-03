@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign in</title>
+    <!-- font awesome icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
+      integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <!-- css stylesheet -->
+    <link rel="stylesheet" href="signin-style.css" />
+  </head>
+  <body>
+    <!-- Navigation Bar -->
+    <nav>
+      <img src="images/logo.png" alt="" />
+      <div class="navigation">
+        <ul>
+          <i id="menu-close" class="fa-solid fa-x"></i>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="students.html">Students</a></li>
+          <li><a href="providers.html">Scholarship Provider</a></li>
+          <li><a href="scholarpass.html">My ScholarPass</a></li>
+          <li><a class="gold" href="accountsignin.html">Account Sign In</a></li>
+        </ul>
+        <img id="menu-btn" src="images/menu.png" alt="" />
+      </div>
+    </nav>
+
+    <div class="container" id="container">
+      <!-- SIGN UP FORM -->
+      <div class="form-container sign-up-container">
+        <form action="/signup" method="POST">
+          <h1>Create Account</h1>
+          <div class="social-container">
+            <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="social"><i class="fab fa-google-plus-g"></i></a>
+            <a href="#" class="social"><i class="fab fa-linkedin-in"></i></a>
+          </div>
+          <span>or use your email for registration</span>
+
+          <div class="infield">
+            <input type="text" name="name" placeholder="Name" required />
+            <label></label>
+          </div>
+          <div class="infield">
+            <input type="email" name="email" placeholder="Email" required />
+            <label></label>
+          </div>
+          <div class="infield">
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              required
+            />
+            <label></label>
+          </div>
+
+          <button type="submit">Sign Up</button>
+        </form>
+      </div>
+
+      <!-- SIGN IN FORM -->
+      <div class="form-container sign-in-container">
+        <form action="/login" method="POST">
+          <h1>Sign in</h1>
+          <div class="social-container">
+            <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="social"><i class="fab fa-google-plus-g"></i></a>
+            <a href="#" class="social"><i class="fab fa-linkedin-in"></i></a>
+          </div>
+          <span>or use your account</span>
+
+          <div class="infield">
+            <input type="email" name="email" placeholder="Email" required />
+            <label></label>
+          </div>
+          <div class="infield">
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              required
+            />
+            <label></label>
+          </div>
+
+          <a href="#" class="forgot">Forgot your password?</a>
+          <button type="submit">Sign In</button>
+        </form>
+      </div>
+
+      <!-- OVERLAY PANELS -->
+      <div class="overlay-container" id="overlayCon">
+        <div class="overlay">
+          <div class="overlay-panel overlay-left">
+            <h1>Welcome Back!</h1>
+            <p>
+              To keep connected with us please login with your personal info
+            </p>
+            <button id="signIn">Sign In</button>
+          </div>
+          <div class="overlay-panel overlay-right">
+            <h1>Hello, Scholar!</h1>
+            <p>Enter your personal details and start your journey with us</p>
+            <button id="signUp">Sign Up</button>
+          </div>
+        </div>
+        <button id="overlayBtn"></button>
+      </div>
+    </div>
+
+    <!-- js code -->
+    <script>
+      const container = document.getElementById("container");
+      const overlaycon = document.getElementById("overlaycon");
+      const overlayBtn = document.getElementById("overlayBtn");
+
+      overlayBtn.addEventListener("click", () => {
+        container.classList.toggle("right-panel-active");
+
+        overlayBtn.classList.remove("btnScaled");
+        window.requestAnimationFrame(() => {
+          overlayBtn.classList.add("btnScaled");
+        });
+      });
+    </script>
+  </body>
+</html>
