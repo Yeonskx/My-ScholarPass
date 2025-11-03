@@ -45,11 +45,10 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
-            flash('Please sign in or create an account to see more.', 'popup')
+            flash('Please log in to access this page.', 'warning')
             return redirect(url_for('signin'))
         return f(*args, **kwargs)
     return decorated_function
-
 
 # --- ROUTES ---
 @app.route('/')
@@ -651,12 +650,11 @@ def recommend():
 # --- Serve CSS & JS directly ---
 @app.route('/<path:filename>')
 def serve_file(filename):
-    # Only allow serving static files, not .html
-    if filename.endswith(('.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.svg')):
-        return send_from_directory('.', filename)
-    else:
-        flash('Page not found.', 'error')
-        return redirect(url_for('index'))
+    # Check if it's an HTML file - render it as a template to enable Jinja2
+    if filename.endswith('.html'):
+        return render_template(filename)
+    # For other files (CSS, JS, images), serve them directly
+    return send_from_directory('.', filename)
 
 # --- Run ---
 if __name__ == '__main__':
