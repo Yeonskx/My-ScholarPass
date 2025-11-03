@@ -46,7 +46,14 @@
           <li><a href="students.html">Students</a></li>
           <li><a href="providers.html">Scholarship Provider</a></li>
           <li><a class="active" href="scholarpass.html">My ScholarPass</a></li>
-          <li><a class="gold" href="accountsignin.html">Account Sign In</a></li>
+          <li>
+            {% if logged_in %}
+            <span style="margin-right: 10px">Hi, {{ user_name }}</span>
+            <a href="/logout" class="gold">Logout</a>
+            {% else %}
+            <a class="gold" href="/signin">Account Sign In</a>
+            {% endif %}
+          </li>
         </ul>
         <img id="menu-btn" src="images/menu.png" alt="" />
       </div>

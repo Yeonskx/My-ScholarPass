@@ -1,8 +1,24 @@
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, session, flash
 import sqlite3
 import os
+from functools import wraps
 
 app = Flask(__name__, template_folder='.')
+
+# IMPORTANT: Set a secret key for session management
+app.secret_key = 'your-secret-key-here-change-this-in-production'  # Change this to a random string in production
+
+# --- Make session available to all templates ---
+@app.context_processor
+def inject_user():
+    """This makes session data available to ALL templates automatically"""
+    return dict(
+        logged_in='user_id' in session,
+        user_id=session.get('user_id'),
+        user_name=session.get('user_name'),
+        user_email=session.get('user_email'),
+        user_role=session.get('user_role')
+    )
 
 # --- Database connection ---
 def get_db_connection():
@@ -24,6 +40,16 @@ def init_db():
     conn.commit()
     conn.close()
 
+# --- Login Required Decorator ---
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Please log in to access this page.', 'warning')
+            return redirect(url_for('signin'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 # --- ROUTES ---
 @app.route('/')
 def index():
@@ -31,6 +57,9 @@ def index():
 
 @app.route('/signin')
 def signin():
+    # If user is already logged in, redirect to questions page
+    if 'user_id' in session:
+        return redirect(url_for('questions'))
     return render_template('accountsignin.html')
 
 @app.route('/students')
@@ -42,10 +71,12 @@ def providers():
     return render_template('providers.html')
 
 @app.route('/questions')
+@login_required  # Protect this route
 def questions():
     return render_template('questions.html')
 
 @app.route('/myscholarpass')
+@login_required  # Protect this route
 def myscholarpass():
     return render_template('scholarpass.html')
 
@@ -59,17 +90,27 @@ def signup():
 
         conn = get_db_connection()
         try:
-            conn.execute(
+            cursor = conn.execute(
                 "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, 'student')",
                 (name, email, password)
             )
+            user_id = cursor.lastrowid
             conn.commit()
+            
+            # Create session for the new user
+            session['user_id'] = user_id
+            session['user_name'] = name
+            session['user_email'] = email
+            session['user_role'] = 'student'
+            
+            conn.close()
+            flash(f'Welcome {name}! Your account has been created successfully.', 'success')
+            return redirect(url_for('questions'))
+            
         except sqlite3.IntegrityError:
             conn.close()
-            return "⚠️ Email already registered. Try logging in."
-        conn.close()
-
-        return redirect(url_for('questions'))
+            flash('Email already registered. Please try logging in.', 'error')
+            return redirect(url_for('signin'))
     
     return render_template('accountsignin.html')
 
@@ -87,13 +128,52 @@ def login():
     conn.close()
 
     if user:
+        # Create session
+        session['user_id'] = user['id']
+        session['user_name'] = user['name']
+        session['user_email'] = user['email']
+        session['user_role'] = user['role']
+        
+        flash(f'Welcome back, {user["name"]}!', 'success')
         return redirect(url_for('questions'))
     else:
-        return "❌ Invalid email or password. Please try again."
+        flash('Invalid email or password. Please try again.', 'error')
+        return redirect(url_for('signin'))
+
+# --- LOGOUT ---
+@app.route('/logout')
+def logout():
+    user_name = session.get('user_name', 'User')
+    
+    # Clear all session data
+    session.clear()
+    
+    flash(f'Goodbye {user_name}! You have been logged out successfully.', 'info')
+    return redirect(url_for('index'))
+
+# --- CHECK SESSION STATUS (Optional - for debugging) ---
+@app.route('/session-info')
+def session_info():
+    if 'user_id' in session:
+        return f"""
+        <h2>Current Session Info:</h2>
+        <p>User ID: {session.get('user_id')}</p>
+        <p>Name: {session.get('user_name')}</p>
+        <p>Email: {session.get('user_email')}</p>
+        <p>Role: {session.get('user_role')}</p>
+        <br>
+        <a href="{url_for('logout')}">Logout</a>
+        """
+    else:
+        return "<h2>No active session</h2><br><a href='/signin'>Login</a>"
 
 # --- RECOMMENDATION ---
 @app.route('/recommend', methods=['POST'])
+@login_required  # Protect this route
 def recommend():
+    # Get user info from session
+    user_name = session.get('user_name', 'Student')
+    
     # --- Collect answers from form ---
     answers = {
         'school_type': request.form.get('school_type', '').lower().strip(),
@@ -221,8 +301,8 @@ def recommend():
 
     results.sort(key=lambda x: x["score"], reverse=True)
 
-    # --- Generate Simplified HTML Output ---
-    html = """
+    # --- Generate Simplified HTML Output with Logout Button ---
+    html = f"""
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -231,149 +311,182 @@ def recommend():
         <title>ScholarPass - Your Recommendations</title>
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
         <style>
-            * {
+            * {{
                 margin: 0;
                 padding: 0;
                 box-sizing: border-box;
-            }
+            }}
 
-            body {
+            body {{
                 font-family: 'Poppins', sans-serif;
                 background-color: #f5f1e8;
                 min-height: 100vh;
-            }
+            }}
 
             /* Navigation */
-            nav {
+            nav {{
                 background: white;
                 padding: 1rem 3rem;
                 box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            }
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }}
 
-            .logo {
+            .logo {{
                 font-size: 24px;
                 font-weight: 700;
                 color: #b8883b;
-            }
+            }}
+
+            .user-info {{
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+            }}
+
+            .user-name {{
+                font-size: 14px;
+                color: #666;
+            }}
+
+            .logout-btn {{
+                padding: 8px 20px;
+                background-color: #dc3545;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                font-weight: 600;
+                font-size: 13px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                text-decoration: none;
+                display: inline-block;
+            }}
+
+            .logout-btn:hover {{
+                background-color: #c82333;
+                transform: translateY(-2px);
+            }}
 
             /* Header */
-            .header {
+            .header {{
                 text-align: center;
                 padding: 3rem 2rem 2rem;
                 max-width: 1200px;
                 margin: 0 auto;
-            }
+            }}
 
-            .header h1 {
+            .header h1 {{
                 font-size: 2.5rem;
                 color: #2c2c2c;
                 margin-bottom: 0.5rem;
-            }
+            }}
 
-            .header p {
+            .header p {{
                 font-size: 1.1rem;
                 color: #666;
                 margin-bottom: 1.5rem;
-            }
+            }}
 
-            .count-badge {
+            .count-badge {{
                 display: inline-block;
                 padding: 8px 20px;
                 background-color: #b8883b;
                 color: white;
                 border-radius: 20px;
                 font-weight: 600;
-            }
+            }}
 
             /* Container */
-            .container {
+            .container {{
                 max-width: 1200px;
                 margin: 0 auto;
                 padding: 2rem;
-            }
+            }}
 
-            .scholarships-grid {
+            .scholarships-grid {{
                 display: grid;
                 grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
                 gap: 20px;
-            }
+            }}
 
             /* Scholarship Card */
-            .scholarship-card {
+            .scholarship-card {{
                 background: white;
                 border-radius: 12px;
                 padding: 24px;
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
                 transition: all 0.3s ease;
-            }
+            }}
 
-            .scholarship-card:hover {
+            .scholarship-card:hover {{
                 transform: translateY(-4px);
                 box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-            }
+            }}
 
-            .card-header {
+            .card-header {{
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 12px;
-            }
+            }}
 
-            .match-score {
+            .match-score {{
                 background-color: #b8883b;
                 color: white;
                 padding: 4px 12px;
                 border-radius: 12px;
                 font-size: 12px;
                 font-weight: 700;
-            }
+            }}
 
-            .scholarship-title {
+            .scholarship-title {{
                 font-size: 18px;
                 font-weight: 700;
                 color: #1a1a1a;
                 margin-bottom: 6px;
-            }
+            }}
 
-            .university-name {
+            .university-name {{
                 font-size: 13px;
                 color: #b8883b;
                 font-weight: 600;
                 margin-bottom: 12px;
-            }
+            }}
 
-            .scholarship-description {
+            .scholarship-description {{
                 font-size: 14px;
                 color: #666;
                 line-height: 1.6;
                 margin-bottom: 14px;
-            }
+            }}
 
-            .tags {
+            .tags {{
                 display: flex;
                 flex-wrap: wrap;
                 gap: 6px;
                 margin-bottom: 14px;
-            }
+            }}
 
-            .tag {
+            .tag {{
                 padding: 5px 12px;
                 border-radius: 12px;
                 font-size: 11px;
                 font-weight: 600;
                 background-color: #b8883b;
                 color: white;
-            }
+            }}
 
-            .tag:nth-child(2) {
+            .tag:nth-child(2) {{
                 background-color: #d4a54a;
-            }
+            }}
 
-            .tag:nth-child(3) {
+            .tag:nth-child(3) {{
                 background-color: #e8c176;
-            }
+            }}
 
-            .matched-criteria {
+            .matched-criteria {{
                 padding: 10px;
                 background-color: #f0f9f4;
                 border-radius: 8px;
@@ -381,30 +494,30 @@ def recommend():
                 font-size: 12px;
                 color: #2d5f3f;
                 font-weight: 500;
-            }
+            }}
 
             /* No Results */
-            .no-results {
+            .no-results {{
                 text-align: center;
                 padding: 4rem 2rem;
                 background: white;
                 border-radius: 12px;
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            }
+            }}
 
-            .no-results h2 {
+            .no-results h2 {{
                 font-size: 1.8rem;
                 color: #2c2c2c;
                 margin-bottom: 1rem;
-            }
+            }}
 
-            .no-results p {
+            .no-results p {{
                 font-size: 1rem;
                 color: #666;
                 margin-bottom: 1.5rem;
-            }
+            }}
 
-            .btn {
+            .btn {{
                 padding: 12px 24px;
                 background-color: #b8883b;
                 color: white;
@@ -414,14 +527,14 @@ def recommend():
                 font-size: 14px;
                 cursor: pointer;
                 transition: all 0.3s ease;
-            }
+            }}
 
-            .btn:hover {
+            .btn:hover {{
                 background-color: #9a7030;
                 transform: translateY(-2px);
-            }
+            }}
 
-            .btn-myscholarpass {
+            .btn-myscholarpass {{
                 display: inline-block;
                 padding: 12px 32px;
                 background-color: #b8883b;
@@ -432,33 +545,42 @@ def recommend():
                 font-size: 14px;
                 transition: all 0.3s ease;
                 margin-top: 1rem;
-            }
+            }}
 
-            .btn-myscholarpass:hover {
+            .btn-myscholarpass:hover {{
                 background-color: #9a7030;
                 transform: translateY(-2px);
                 box-shadow: 0 4px 12px rgba(184, 136, 59, 0.3);
-            }
+            }}
 
             /* Responsive */
-            @media (max-width: 768px) {
-                .header h1 {
+            @media (max-width: 768px) {{
+                .header h1 {{
                     font-size: 2rem;
-                }
+                }}
 
-                .scholarships-grid {
+                .scholarships-grid {{
                     grid-template-columns: 1fr;
-                }
+                }}
 
-                nav, .container {
+                nav, .container {{
                     padding: 1rem 1.5rem;
-                }
-            }
+                }}
+
+                nav {{
+                    flex-direction: column;
+                    gap: 1rem;
+                }}
+            }}
         </style>
     </head>
     <body>
         <nav>
             <div class="logo">ScholarPass</div>
+            <div class="user-info">
+                <span class="user-name">Welcome, {user_name}</span>
+                <a href="/logout" class="logout-btn">Logout</a>
+            </div>
         </nav>
 
         <div class="header">
@@ -528,6 +650,10 @@ def recommend():
 # --- Serve CSS & JS directly ---
 @app.route('/<path:filename>')
 def serve_file(filename):
+    # Check if it's an HTML file - render it as a template to enable Jinja2
+    if filename.endswith('.html'):
+        return render_template(filename)
+    # For other files (CSS, JS, images), serve them directly
     return send_from_directory('.', filename)
 
 # --- Run ---
